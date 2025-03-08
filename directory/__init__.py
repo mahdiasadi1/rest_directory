@@ -19,4 +19,6 @@ bcrypt = Bcrypt(app)
 def home():
     return {"message":"hello world"}
 from directory.apps.users_app import users
+from directory.apps.sites_app import sites
 app.register_blueprint(users)
+app.register_blueprint(sites)
