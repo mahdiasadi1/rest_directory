@@ -51,7 +51,7 @@ def login():
 
     return {'access_token': access_token, 'refresh_token': refresh_token}, 200
 @users.route('/',methods=["GET"])
-@jwt_required()  # Remove the parentheses
+@jwt_required() 
 def get_user():
     identitiy= get_jwt_identity()
     user= User.query.filter(User.username.ilike(identitiy)).first()
@@ -61,3 +61,28 @@ def get_user():
 def get_new_access_token():
      identity = get_jwt_identity()
      return {'access_token': create_access_token(identity=identity)}
+#  modify password
+@users.route('/<int:user_id>',methods=["PATCH"])
+@jwt_required()
+@json_only
+def modify_password(user_id):
+    user=User.query.get(user_id)
+    if not user :
+        return {"error": "user not found"},400  
+    args = request.get_json()
+    try:
+        user.password = args.get("password")
+        db.session.commit()
+    except ValueError as e: 
+        db.session.rollback()
+        return {"error":f"{e}"},400
+    return {} , 203
+@users.route('/<int:user_id>', methods=["DELETE"])
+@jwt_required()
+def delete_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return {"error": "user not found"},400  
+    db.session.delete(user)
+    db.session.commit()
+    return {"message": "user successfully deleted"} , 201

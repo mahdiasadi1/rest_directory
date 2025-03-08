@@ -72,3 +72,34 @@ def modify_thumbnail(site_id):
     site.icon = filename
     db.session.commit()
     return {}, 204
+@sites.route('/<int:id>',methods=["DELETE"])
+@jwt_required()
+def delete_site(id):
+    site = Site.query.get(id)
+    
+    if not site:
+        return {"error": f" site with id {id} not found"}
+    name = site.name
+    db.session.delete(site)
+    db.session.commit()
+    return {"message": f"{name} has been deleted"}
+@sites.route('/<int:id>',methods=["PUT"])
+@jwt_required()
+@json_only
+def modify_site(id):
+    site = Site.query.get(id)
+    if not site:
+        return {"error": f" site  with id {id} not found"}
+    args = request.get_json()
+    try:
+        site.name = args.get("name") if args.get("name") else site.name
+        site.description = args.get("description") if args.get("description") else site.description
+        site.address = args.get("address") if args.get("address") else site.address
+        db.session.commit()
+    except ValueError as  e :
+        db.session.rollback()
+        return { "error" : f"{e}"} ,400   
+    except IntegrityError:
+        db.session.rollback()
+        return { "error" : " duplicated"},400
+    return {} , 203
